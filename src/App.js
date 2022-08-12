@@ -1,5 +1,4 @@
-import { type } from '@testing-library/user-event/dist/type';
-import { useReducer, useState } from 'react';
+import { useReducer } from 'react';
 import classes from './App.module.css';
 import DigitButtons from './DigitButtons';
 import OperationButton from './OperationButton';
@@ -17,15 +16,17 @@ function reducer(state, {type, payload}) {
       if(state.overwrite) {
         return {
           ...state,
-          currentOperand: payload.digit,
+          currentOperand:payload.digit.toString(),
           overwrite: false
         }
       }
       if(payload.digit==='0' && state.currentOperand==='0') return state;
       if(payload.digit==='.' && state.currentOperand.includes('.') ) return state;
+      
       return {
         ...state,
-        currentOperand: `${state.currentOperand || ''}${payload.digit}`
+        currentOperand: `${state.currentOperand || ''}${payload.digit}`,
+        overwrite:false
       }
     case ACTIONS.CHOOSE_OPERATION:
       if (state.currentOperand == null && state.previousOperand == null) {
@@ -38,14 +39,15 @@ function reducer(state, {type, payload}) {
           operation: payload.operation,
           previousOperand:state.currentOperand,
           currentOperand: null,
+          overwrite:false
         }
       }
-
       return {
         ...state,
         previousOperand: evaluate(state),
         operation: payload.operation,
         currentOperand: null,
+        overwrite:false,
       }
 
     case ACTIONS.CLEAR:
@@ -77,7 +79,6 @@ function reducer(state, {type, payload}) {
       ) {
         return state
       }
-
       return {
         ...state,
         overwrite: true,
@@ -86,6 +87,7 @@ function reducer(state, {type, payload}) {
         currentOperand: evaluate(state),
       }
   }
+  
 }
 
 
@@ -133,13 +135,20 @@ const INTEGER_FORMATTER= new Intl.NumberFormat("en-us", {
 })
 function formatOperand (operand){
   if (operand == null) return
+  // console.log(operand);
   const [integer, decimal] = operand.split('.')
-    if (decimal == null) return  INTEGER_FORMATTER.format(integer)
+  // console.log(integer,decimal);
+    if (decimal == null){
+      // console.log(decimal);
+      return INTEGER_FORMATTER.format(integer)
+    }
+    // console.log('ciao');
     return `${INTEGER_FORMATTER.format(integer)}.${decimal}`
+    // return 10
 }
 
 function App() {
-  const [{currentOperand, previousOperand, operation}, dispatch] = useReducer(reducer, {});
+  const [{currentOperand, previousOperand, operation,overwrite}, dispatch] = useReducer(reducer, {});
   
   return (
     <div className={classes['calculator-grid']}>
